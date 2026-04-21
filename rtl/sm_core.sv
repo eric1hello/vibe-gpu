@@ -252,7 +252,7 @@ module sm_core (
         hazard_raw = 0;
         if (if_id_valid) begin
             if (id_rs1 != 0 && scoreboard[if_id_warp][id_rs1]) hazard_raw = 1;
-             if ((id_opcode == `OP_ADD || id_opcode == `OP_SUB || id_opcode == `OP_MUL || id_opcode == `OP_AND || id_opcode == `OP_OR || id_opcode == `OP_STW || id_opcode == `OP_BEQ || id_opcode == `OP_BNE || id_opcode == `OP_FADD || id_opcode == `OP_FMUL || id_opcode == `OP_FADD4 || id_opcode == `OP_FMUL4 || id_opcode == `OP_SLL || id_opcode == `OP_SRL) && id_rs2 != 0 && scoreboard[if_id_warp][id_rs2]) hazard_raw = 1;
+             if ((id_opcode == `OP_ADD || id_opcode == `OP_SUB || id_opcode == `OP_MUL || id_opcode == `OP_AND || id_opcode == `OP_OR || id_opcode == `OP_STW || id_opcode == `OP_BEQ || id_opcode == `OP_BNE || id_opcode == `OP_FADD || id_opcode == `OP_FMUL || id_opcode == `OP_FADD4 || id_opcode == `OP_FMUL4 || id_opcode == `OP_TCDP4 || id_opcode == `OP_SLL || id_opcode == `OP_SRL) && id_rs2 != 0 && scoreboard[if_id_warp][id_rs2]) hazard_raw = 1;
         end
         // Structural Hazard: MEM op in EX/MEM
         hazard_struct = 0;

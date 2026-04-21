@@ -46,6 +46,10 @@ class Assembler:
         """FP4 E2M1 浮点乘（使用寄存器低 4 位）。"""
         self.insts.append(make_inst(OP_FMUL4, rd, rs1, rs2, 0))
 
+    def tcdp4(self, rd, rs1, rs2):
+        """Tensor Core 类：4×FP4 点积，rs1/rs2 低 16 位各含 4 个 FP4 nibble。"""
+        self.insts.append(make_inst(OP_TCDP4, rd, rs1, rs2, 0))
+
     def csr(self, rd, rs1):
         # Read CSR: rs1 is CSR index, rd is destination
         self.insts.append(make_inst(OP_CSR, rd, rs1, 0, 0))

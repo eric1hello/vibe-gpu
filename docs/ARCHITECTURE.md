@@ -1,6 +1,6 @@
 # Vibe GPU 架构与文档（中文）
 
-本文档从硬件与软件两方面说明 **Vibe GPU** 的设计。本仓库在 [PKUZHOU/Vibe-GPU](https://github.com/PKUZHOU/Vibe-GPU) 基础上演进，增加了 **FP4（E2M1）** 运算单元与 `FADD4`/`FMUL4` 指令。
+本文档从硬件与软件两方面说明 **Vibe GPU** 的设计。本仓库在 [PKUZHOU/Vibe-GPU](https://github.com/PKUZHOU/Vibe-GPU) 基础上演进，增加了 **FP4（E2M1）** 标量指令与 **Tensor Core 类比** 的规约指令 `TCDP4`。
 
 ## 1. 硬件架构
 
@@ -45,7 +45,8 @@ Vibe GPU 为教学与研究用途的自定义 **SIMT GPGPU**，采用 32 位类 
 3. **EX（执行）**  
    - **ALU**：整数 `ADD/SUB/MUL/AND/OR/SLL/SRL` 等。  
    - **FP8**：`FADD`/`FMUL`，操作数为寄存器 **低 8 位**（E4M3）。  
-   - **FP4**：`FADD4`/`FMUL4`，操作数为寄存器 **低 4 位**（E2M1），见下文。  
+   - **CUDA Core 类 FP4**：`FADD4`/`FMUL4`，每线程对 **两个寄存器各取低 4 位** 做标量二元运算（E2M1）。  
+   - **Tensor Core 类**：`TCDP4`，对 `rs1`/`rs2` **低 16 位** 中打包的 **4 路 FP4** 做点积规约（见 1.6 节）。  
    - **分支**：`BEQ`/`BNE` 条件判断。  
    - **SIMT 栈**：处理控制流分歧（见 1.3 节）。
 
@@ -72,13 +73,24 @@ Vibe GPU 为教学与研究用途的自定义 **SIMT GPGPU**，采用 32 位类 
 - **全局停顿**：访存未命中等情况下插入气泡或停顿整级流水线。  
 - **L1 握手**：通过请求/完成握手保证访存在停顿多周期时仍语义正确。
 
-### 1.5 FP4（E2M1）数据通路
+### 1.5 FP4（E2M1）数据通路 — CUDA Core 类标量
 
 - **格式**：`S(1) | E(2) | M(1)`，指数偏置 **1**；`E=0` 按 **零** 处理（非规格 flush）。  
 - **正规数**：  
   \(\;(-1)^S \cdot 2^{(E-1)} \cdot (1 + M/2)\;\)，\(E \in \{1,2,3\}\)。  
-- **实现**：`rtl/fp4_unit.sv` 内将 FP4 与 **定点（缩放因子 FIX=256）** 互转，乘加后再 **最近邻** 编码回 4 位；与 `tools/fp4_soft.py` 对齐便于回归。  
-- **指令**：`FADD4`（`0x0D`）、`FMUL4`（`0x0E`），结果零扩展到 32 位写入 `Rd`。
+- **实现**：`rtl/fp4_unit.sv` 内将 FP4 与 **定点（缩放因子 FIX=256）** 互转；与 `tools/fp4_soft.py` 对齐。  
+- **指令**：`FADD4`（`0x0D`）、`FMUL4`（`0x0E`），**每线程一次只处理一对 FP4 标量**（取自 `rs1`/`rs2` 低 4 位），类比 GPU 上 **CUDA Core** 对 FP32/FP16 的逐线程标量运算。
+
+### 1.6 CUDA Core 与 Tensor Core（教学类比）
+
+商用 GPU 中，**CUDA Core** 负责通用标量/向量浮点与整数；**Tensor Core** 负责矩阵乘加片段（如 WMMA）的高吞吐规约。本设计用 **两条可区分的硬件路径** 做极简对应：
+
+| 类比 | 硬件 | 指令 | 数据形态 |
+|------|------|------|----------|
+| CUDA Core 类 | `fp8_unit`、`fp4_unit` | `FADD`/`FMUL`、`FADD4`/`FMUL4` | 每线程 **标量**（低 8/4 位） |
+| Tensor Core 类 | `tensor_core.sv` | `TCDP4`（`0x0F`） | `rs1`/`rs2` **低 16 位** 各含 **4×FP4**，做点积 \(\sum_{i=0}^{3} a_i b_i\) 后编码为一个 FP4 写入 `rd` |
+
+`TCDP4` **不是**完整矩阵乘，而是 **4-lane 点积片段**，便于在 RTL/文档中把「规约型」运算与「标量二元」运算分开。参考模型：`tools/fp4_soft.dot4_fp4`。
 
 ## 2. 软件架构
 
@@ -114,7 +126,8 @@ Vibe GPU 为教学与研究用途的自定义 **SIMT GPGPU**，采用 32 位类 
 ├── rtl/                  # SystemVerilog
 │   ├── sm_core.sv        # SM 与流水线
 │   ├── alu.sv            # ALU + FP8 + FP4
-│   ├── fp4_unit.sv       # FP4 运算单元
+│   ├── fp4_unit.sv       # FP4 标量（CUDA Core 类）
+│   ├── tensor_core.sv    # FP4 四路点积（Tensor Core 类）
 │   ├── fp8_unit.sv
 │   ├── simt_stack.sv
 │   └── ...

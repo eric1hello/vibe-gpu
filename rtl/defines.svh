@@ -28,7 +28,8 @@
 `define OP_SLL  6'h0B
 `define OP_SRL  6'h0C
 `define OP_FADD4 6'h0D  // FP4 E2M1 浮点加（操作数为寄存器低 4 位）
-`define OP_FMUL4 6'h0E  // FP4 E2M1 浮点乘
+`define OP_FMUL4 6'h0E  // FP4 E2M1 浮点乘（CUDA Core 类标量）
+`define OP_TCDP4 6'h0F  // Tensor Core 类：4×FP4 点积（低 16 位打包）
 `define OP_LDW  6'h10
 `define OP_STW  6'h11
 `define OP_TID  6'h12

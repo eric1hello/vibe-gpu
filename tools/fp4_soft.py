@@ -57,3 +57,19 @@ def mul_fp4(a: int, b: int) -> int:
 
 def add_fp4(a: int, b: int) -> int:
     return encode_fp4(decode_fp4(a) + decode_fp4(b))
+
+
+def dot4_fp4(a32: int, b32: int) -> int:
+    """与 rtl/tensor_core.sv 一致：低 16 位 4 路 FP4 点积，每项乘积向 0 截断后累加。"""
+    acc = 0
+    for i in range(4):
+        na = (a32 >> (i * 4)) & 0xF
+        nb = (b32 >> (i * 4)) & 0xF
+        va = decode_fp4(na)
+        vb = decode_fp4(nb)
+        p = va * vb
+        if p >= 0:
+            acc += p // FIX
+        else:
+            acc += -(-p // FIX)
+    return encode_fp4(acc)

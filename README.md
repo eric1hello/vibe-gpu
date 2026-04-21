@@ -55,12 +55,13 @@ asm.add(3, 1, 2)    # R3 = R1 + R2
 python tests/test_suite.py
 ```
 
-**包含的测试**：调试与全局 ID、Load、循环、分支分歧、向量乘、矩阵乘、全连接层、**FP4 E2M1 乘法**（`apps/app_fp4_test.py`，与 `rtl/fp4_unit.sv`、`tools/fp4_soft.py` 对齐）。
+**包含的测试**：调试与全局 ID、Load、循环、分支分歧、向量乘、矩阵乘、全连接层、**FP4 E2M1 乘法**（`apps/app_fp4_test.py`）、**Tensor Core `TCDP4` 四路点积**（`apps/app_tensor_test.py`，与 `rtl/tensor_core.sv`、`tools/fp4_soft.dot4_fp4` 对齐）。
 
-仅跑 FP4 并检查内存与波形路径：
+仅跑 FP4 / Tensor 并检查内存与波形：
 
 ```bash
 python tests/test_fp4_only.py
+python tests/test_tensor_only.py
 ```
 
 ## 4. 目录结构
@@ -69,7 +70,7 @@ python tests/test_fp4_only.py
 * `sim/`：Verilator 仿真（`main.cpp`、`Makefile`）。
 * `tools/`：编译器与汇编器（`vibe_cuda.py`、`assembler.py`、`isa.py`、`fp4_soft.py`）。
 * `apps/`：应用内核示例。
-* `tests/`：`program.hex`、黄金参考、`test_suite.py`、`test_fp4_only.py`。
+* `tests/`：`program.hex`、黄金参考、`test_suite.py`、`test_fp4_only.py`、`test_tensor_only.py`。
 * `docs/`：架构与 ISA 文档（中文）。
 
 ## 5. 环境准备与运行

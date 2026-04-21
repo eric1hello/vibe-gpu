@@ -40,7 +40,8 @@
 | `0x0B` | SLL | R,R,R | 逻辑左移 |
 | `0x0C` | SRL | R,R,R | 逻辑右移 |
 | `0x0D` | FADD4 | R,R,R | FP4 加（操作数**低 4 位**为 E2M1） |
-| `0x0E` | FMUL4 | R,R,R | FP4 乘 |
+| `0x0E` | FMUL4 | R,R,R | FP4 乘（标量，CUDA Core 类） |
+| `0x0F` | TCDP4 | R,R,R | Tensor Core 类：低 16 位 4×FP4 点积 |
 | `0x10` | LDW | R,Rs1 | 从 `[Rs1+Imm]` 加载字（寻址在译码阶段与立即数组合，见实现） |
 | `0x11` | STW | Rs1,Rs2 | 存储字 |
 | `0x12` | TID | Rd | `Rd` = 线程 ID（Warp 内 0–7） |

@@ -238,6 +238,43 @@ def test_fp4():
     return False
 
 
+def test_tensor():
+    """Tensor Core TCDP4 与 rtl/tensor_core.sv / dot4_fp4 对齐（见 apps/app_tensor_test.py）。"""
+    print("\n--- Testing Tensor Core (TCDP4) ---")
+    success, _ = run_cmd(_py("apps/app_tensor_test.py"))
+    if not success:
+        return False
+    success, output = run_cmd("cd sim && make clean && make run")
+    if not success:
+        return False
+
+    gold_path = "tests/tensor_gold.txt"
+    if not os.path.exists(gold_path):
+        print(f"[FAIL] Missing {gold_path}")
+        return False
+    gold_vals = []
+    with open(gold_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                gold_vals.append(int(line))
+
+    sim_vals = parse_simulation_output(output)
+    errors = 0
+    n = min(len(gold_vals), len(sim_vals), 128)
+    for i in range(n):
+        if sim_vals[i] != gold_vals[i]:
+            print(f"Mismatch at {i}: Exp {gold_vals[i]}, Got {sim_vals[i]}")
+            errors += 1
+            if errors > 10:
+                break
+    if errors == 0 and n >= 128:
+        print("[PASS] Tensor Core Test Passed")
+        return True
+    print(f"[FAIL] Tensor Core Test Failed with {errors} errors.")
+    return False
+
+
 def test_fc():
     print("\n--- Testing Fully Connected Layer ---")
     # 1. Run App Generator
@@ -280,6 +317,7 @@ def main():
         test_matmul,
         test_fc,
         test_fp4,
+        test_tensor,
     ]
     
     passed = 0

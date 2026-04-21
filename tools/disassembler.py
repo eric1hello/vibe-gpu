@@ -58,6 +58,7 @@ def disassemble(hex_file):
         elif opcode == OP_FMUL: op_name = "FMUL"; args = f"R{rd}, R{rs1}, R{rs2}"
         elif opcode == OP_FADD4: op_name = "FADD4"; args = f"R{rd}, R{rs1}, R{rs2}"
         elif opcode == OP_FMUL4: op_name = "FMUL4"; args = f"R{rd}, R{rs1}, R{rs2}"
+        elif opcode == OP_TCDP4: op_name = "TCDP4"; args = f"R{rd}, R{rs1}, R{rs2}"
         
         print(f"{pc:04X}: {op_name} {args}")
         
