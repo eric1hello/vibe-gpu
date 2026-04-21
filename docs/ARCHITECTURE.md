@@ -92,6 +92,10 @@ Vibe GPU 为教学与研究用途的自定义 **SIMT GPGPU**，采用 32 位类 
 
 `TCDP4` **不是**完整矩阵乘，而是 **4-lane 点积片段**，便于在 RTL/文档中把「规约型」运算与「标量二元」运算分开。参考模型：`tools/fp4_soft.dot4_fp4`。
 
+### 1.7 系统与 Tensor Core 执行过程（图示）
+
+流水线、多 SM 拓扑、EX 数据通路分流、`TCDP4` 内部步骤、**Warp/线程分配与 HW_ID**、**Grid/Block 与 `vibe_cuda` 编译映射** 见 **[执行过程与TensorCore.md](执行过程与TensorCore.md)**（Mermaid 图，便于在支持渲染的查看器中浏览）。
+
 ## 2. 软件架构
 
 从高层 Python 到机器码的完整工具链如下。
@@ -101,7 +105,7 @@ Vibe GPU 为教学与研究用途的自定义 **SIMT GPGPU**，采用 32 位类 
 ### 2.1 第二层：Vibe CUDA 前端（`tools/vibe_cuda.py`）
 
 - 使用 `@cuda.jit` 标记内核。  
-- 内置 `blockIdx`、`threadIdx`、`blockDim` 等概念（由编译器映射到 `TID`/`WARPID`/`SMID` 等）。  
+- 内置 `blockIdx`、`threadIdx`、`blockDim`、`gridDim` 等概念：`HW_ID = SMID×32 + WARPID×8 + TID`，再按编译期 **`block_dim`** 用与/移位得到块内线程号与块号；**Grid 隐式为 128 线程占满**（详见 [执行过程与TensorCore.md](执行过程与TensorCore.md) §7）。  
 - **AST 分析**：解析 `if`、`for`、赋值等。  
 - **寄存器分配**：简单线性分配，映射到 `R1`–`R31`。  
 - **控制流**：自动生成 `BEQ`/`BNE`/`JOIN` 等。
@@ -122,7 +126,7 @@ Vibe GPU 为教学与研究用途的自定义 **SIMT GPGPU**，采用 32 位类 
 ```
 .
 ├── apps/                 # 应用内核（Python）
-├── docs/                 # 文档与图片（本文件、isa.md）
+├── docs/                 # 文档与图片（本文件、isa.md、执行过程与TensorCore.md）
 ├── rtl/                  # SystemVerilog
 │   ├── sm_core.sv        # SM 与流水线
 │   ├── alu.sv            # ALU + FP8 + FP4

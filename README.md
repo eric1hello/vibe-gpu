@@ -4,7 +4,8 @@
 
 **[📄 架构说明（中文）](docs/ARCHITECTURE.md)**  
 **[📄 指令集 ISA（中文）](docs/isa.md)**  
-**[📄 仿真与波形（中文）](docs/仿真与波形.md)**
+**[📄 仿真与波形（中文）](docs/仿真与波形.md)**  
+**[📄 系统执行过程与 Tensor Core 图示](docs/执行过程与TensorCore.md)**
 
 ## 1. 硬件架构（RTL）
 
